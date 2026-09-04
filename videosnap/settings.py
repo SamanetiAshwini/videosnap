@@ -25,8 +25,12 @@ SECRET_KEY = 'django-insecure-)5$_edbbf9k*s^8q1mgh1$olefqmvv@f-@58&(#13f*)^^=6jx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = [
+    "ashwini.online",
+    "www.ashwini.online",
+    "localhost",
+    "127.0.0.1",
+]
 
 # Application definition
 
