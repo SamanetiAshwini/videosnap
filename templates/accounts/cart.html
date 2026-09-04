@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Cart</title>
+</head>
+<body>
+
+    <h1>My Shopping Cart</h1>
+
+    {% if items %}
+
+    <table border="1" cellpadding="10">
+
+        <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+        </tr>
+
+        {% for item in items %}
+
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>₹{{ item.product.price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.total_price }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <br>
+
+    <h2>Grand Total : ₹{{ total }}</h2>
+
+    {% else %}
+
+    <h3>Your Cart is Empty</h3>
+
+    {% endif %}
+
+    <br>
+
+    <a href="{% url 'products' %}">
+        Continue Shopping
+    </a>
+
+</body>
+</html>

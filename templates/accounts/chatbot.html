@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot Assistant</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 450px;
+      height: 600px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background-color: #2563eb;
+      color: #ffffff;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .chat-header a {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.9em;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    .chat-header a:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: #f9fafb;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95em;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .bot-message {
+      align-self: flex-start;
+      background-color: #e5e7eb;
+      color: #1f2937;
+      border-bottom-left-radius: 2px;
+    }
+
+    .user-message {
+      align-self: flex-end;
+      background-color: #2563eb;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      padding: 12px;
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      gap: 8px;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      outline: none;
+      font-size: 0.95em;
+    }
+
+    .chat-input-area input:focus {
+      border-color: #2563eb;
+    }
+
+    .chat-input-area button {
+      padding: 10px 16px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .chat-input-area button:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <span>Chatbot Assistant</span>
+      <a href="{% url 'products' %}">Products</a>
+    </div>
+    
+    <div class="chat-box" id="chatBox">
+      <div class="message bot-message">Hello! How can I help you today?</div>
+      
+      <!-- Existing DB Chat History -->
+      {% for chat in history %}
+        {% if chat.user_input %}
+          <div class="message user-message">{{ chat.user_input }}</div>
+        {% endif %}
+        {% if chat.text_output %}
+          <div class="message bot-message">{{ chat.text_output }}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <form class="chat-input-area" id="chatForm">
+      {% csrf_token %}
+      <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off" required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const chatForm = document.getElementById('chatForm');
+    const userInput = document.getElementById('userInput');
+    const chatBox = document.getElementById('chatBox');
+
+    // Scroll to bottom helper
+    function scrollToBottom() {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    scrollToBottom();
+
+    chatForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const messageText = userInput.value.trim();
+      if (!messageText) return;
+
+      // Clear input field immediately
+      userInput.value = '';
+
+      // Append user message to chatBox
+      const userMessageDiv = document.createElement('div');
+      userMessageDiv.className = 'message user-message';
+      userMessageDiv.textContent = messageText;
+      chatBox.appendChild(userMessageDiv);
+      scrollToBottom();
+
+      // Show typing indicator / loading state
+      const botTypingDiv = document.createElement('div');
+      botTypingDiv.className = 'message bot-message';
+      botTypingDiv.textContent = 'Typing...';
+      chatBox.appendChild(botTypingDiv);
+      scrollToBottom();
+
+      try {
+        // Fetch the Django CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // POST request to same view endpoint
+        const response = await fetch('', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams({
+            'message': messageText
+          })
+        });
+
+        const data = await response.json();
+        
+        // Remove typing indicator
+        if (chatBox.contains(botTypingDiv)) {
+          chatBox.removeChild(botTypingDiv);
+        }
+
+        // Add bot reply bubble
+        const botReplyDiv = document.createElement('div');
+        botReplyDiv.className = 'message bot-message';
+        
+        if (response.ok && data.response) {
+          botReplyDiv.textContent = data.response;
+        } else {
+          botReplyDiv.textContent = 'Error: ' + (data.error || 'Something went wrong.');
+          botReplyDiv.style.color = '#ef4444';
+        }
+        chatBox.appendChild(botReplyDiv);
+      } catch (error) {
+        // Fallback error handling
+        if (chatBox.contains(botTypingDiv)) {
+          chatBox.removeChild(botTypingDiv);
+        }
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'message bot-message';
+        errorDiv.textContent = 'Error: Could not connect to the server.';
+        errorDiv.style.color = '#ef4444';
+        chatBox.appendChild(errorDiv);
+        console.error(error);
+      }
+      
+      scrollToBottom();
+    });
+  </script>
+
+</body>
+</html>

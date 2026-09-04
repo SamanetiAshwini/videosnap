@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Addition of A+B</title>
+</head>
+
+<body>
+
+    <h2>ADDITION</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div>
+            <label>Avalue</label><br>
+            <input type="number" name="Avalue" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label>Bvalue</label><br>
+            <input type="number" name="Bvalue" required>
+        </div>
+
+        <br>
+
+        <button type="submit">Add</button>
+
+    </form>
+    <p>{{avalue}}</p>
+    <p>{{bvalue}}</p>
+    <p>{{result}}</p>
+
+    <br>
+
+    {% if result %}
+    <h3>Result : {{ result }}</h3>
+    {% endif %}
+
+</body>
+
+</html>
